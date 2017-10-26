@@ -1,25 +1,25 @@
 <?xml version='1.0'?>
-<?define ProductVersion = "2.2.3"?> <!-- Match NextCloud Client version -->
-<?define PrevProductVersion = "2.2.2"?> <!-- Match previous NextCloud Client version -->
-<?define ExeSourceFile = "Nextcloud-2.2.3.4-setup.exe"?> <!-- Match new .exe -->
-<?define ProductCode = "6B91AB9A-2D68-419B-8C20-4FA7A0398F47"?> <!-- Regenerate for new upgrade -->
-<?define ProductUpgradeCode = "E75E827E-25D3-49AB-82A4-485509234141"?> <!-- When upgrading, move previous ProductCode here -->
+<?define ProductVersion = "1.1.0"?> <!-- Match Unchecky version -->
+<?define PrevProductVersion = "1.0.3"?> <!-- Match previous Unchecky version -->
+<?define ExeSourceFile = "unchecky_setup.exe"?> <!-- Match new .exe -->
+<?define ProductCode = "770B19C5-DC85-4EDC-B468-F6D9B6549C9B"?> <!-- Regenerate for new upgrade -->
+<?define ProductUpgradeCode = "F209E059-64FE-4CDF-B8B7-171D23198BB1"?> <!-- When upgrading, move previous ProductCode here -->
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
         <Product Id='*'
                 UpgradeCode="$(var.ProductUpgradeCode)"
-                Name='NextCloud Sync Client'
+                Name='Unchecky'
                 Language='1033'
                 Version='$(var.ProductVersion)'
-                Manufacturer='Penn Manor NextCloud'>
+                Manufacturer='Reason Software Company Inc.'>
                 <Package Id='$(var.ProductCode)'
-                        Description='NextCloud Client $(var.ProductVersion)'
+                        Description='Unchecky v$(var.ProductVersion)'
                         InstallerVersion='200'
                         Compressed='yes' />
                 <Media Id='1' Cabinet='setup.cab' EmbedCab='yes' />
                 <Directory Id='TARGETDIR' Name='SourceDir'>
                         <Directory Id="TempFolder">
                                 <Directory Id="INSTALLLOCATION" Name="~_tmpdir">
-                                        <Component Id='MyComponent' DiskId='1' Guid='B3514243-DFB8-4BB1-8495-ED6153468361'>
+                                        <Component Id='MyComponent' DiskId='1' Guid='25E6F9B7-E34C-4ECB-8AAC-1A02FB6B396B'>
                                                 <File Id="File0" Name="$(var.ExeSourceFile)" Source="$(var.ExeSourceFile)" />
                                         </Component>
                                 </Directory>
@@ -39,6 +39,10 @@
                                 Property="UPGRADEFOUND" />
                 </Upgrade>
                 <Property Id="ARPSYSTEMCOMPONENT" Value="1" />
+                <Property Id="INSTALLFOLDER">
+                        <RegistrySearch Id='InstallPathRegistry' Type='raw'
+                                Root='HKLM' Key='Software\Microsoft\Windows\CurrentVersion\Uninstall\Unchecky' Name='InstallLocation' Win64='no' />
+                </Property>
                 <Feature Id='InstallFeature' Title='Install Feature' Level='1'>
                         <ComponentRef Id='MyComponent' />
                 </Feature>
@@ -52,15 +56,23 @@
 
                 <!-- Run Action -->
                 <CustomAction Id="RunWrapExe"
-                        Return="ignore"
+                        Return="check"
                         Execute="deferred"
                         FileKey="File0"
-                        ExeCommand="$(var.ExeSourceFile) /S"
+                        ExeCommand="-install -no_desktop_icon -from_msi"
+                        HideTarget="no"
+                        Impersonate="no" />
+                <CustomAction Id="RunUninstaller"
+                        Return="ignore"
+                        Execute="deferred"
+                        Directory="INSTALLLOCATION"
+                        ExeCommand="&quot;[INSTALLFOLDER]\uninstall.exe&quot; -uninstall -path &quot;[INSTALLFOLDER]&quot; -copy_to_temp_dir -delsettings -from_msi"
                         HideTarget="no"
                         Impersonate="no" />
                 <InstallExecuteSequence>
                         <Custom Action="PreventDowngrading" After="FindRelatedProducts">NEWPRODUCTFOUND</Custom>
                         <Custom Action="RunWrapExe" After="InstallFiles">NOT REMOVE~="ALL"</Custom>
+                        <Custom Action="RunUninstaller" After="InstallFiles">REMOVE~="ALL"</Custom>
                         <RemoveExistingProducts After="InstallFinalize" />
                 </InstallExecuteSequence>
         </Product>
